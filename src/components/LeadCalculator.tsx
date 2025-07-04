@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Input } from '@/components/ui/input';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, BarChart, Bar } from 'recharts';
 import { Plus, Minus } from 'lucide-react';
 
 interface Metrics {
@@ -76,19 +77,18 @@ const LeadCalculator = () => {
   }, [propertyType, launchType, location, bhk, marketingChannels, sellUnits, duration]);
 
   const chartData = [
-    { month: 'Month 1', bookings: Math.round(metrics.bookings * 0.1), siteVisits: Math.round(metrics.siteVisits * 0.15), cpl: Math.round(metrics.leads * 0.2) },
-    { month: 'Month 2', bookings: Math.round(metrics.bookings * 0.2), siteVisits: Math.round(metrics.siteVisits * 0.25), cpl: Math.round(metrics.leads * 0.3) },
-    { month: 'Month 3', bookings: Math.round(metrics.bookings * 0.35), siteVisits: Math.round(metrics.siteVisits * 0.4), cpl: Math.round(metrics.leads * 0.45) },
-    { month: 'Month 4', bookings: Math.round(metrics.bookings * 0.6), siteVisits: Math.round(metrics.siteVisits * 0.65), cpl: Math.round(metrics.leads * 0.7) },
-    { month: 'Month 5', bookings: Math.round(metrics.bookings * 0.8), siteVisits: Math.round(metrics.siteVisits * 0.85), cpl: Math.round(metrics.leads * 0.9) },
-    { month: 'Month 6', bookings: metrics.bookings, siteVisits: metrics.siteVisits, cpl: metrics.leads }
+    { month: 'Month 1', leads: Math.round(metrics.leads * 0.2), qualifiedLeads: Math.round(metrics.qualifiedLeads * 0.15), siteVisits: Math.round(metrics.siteVisits * 0.15), bookings: Math.round(metrics.bookings * 0.1) },
+    { month: 'Month 2', leads: Math.round(metrics.leads * 0.3), qualifiedLeads: Math.round(metrics.qualifiedLeads * 0.25), siteVisits: Math.round(metrics.siteVisits * 0.25), bookings: Math.round(metrics.bookings * 0.2) },
+    { month: 'Month 3', leads: Math.round(metrics.leads * 0.45), qualifiedLeads: Math.round(metrics.qualifiedLeads * 0.4), siteVisits: Math.round(metrics.siteVisits * 0.4), bookings: Math.round(metrics.bookings * 0.35) },
+    { month: 'Month 4', leads: Math.round(metrics.leads * 0.7), qualifiedLeads: Math.round(metrics.qualifiedLeads * 0.65), siteVisits: Math.round(metrics.siteVisits * 0.65), bookings: Math.round(metrics.bookings * 0.6) },
+    { month: 'Month 5', leads: Math.round(metrics.leads * 0.9), qualifiedLeads: Math.round(metrics.qualifiedLeads * 0.85), siteVisits: Math.round(metrics.siteVisits * 0.85), bookings: Math.round(metrics.bookings * 0.8) },
+    { month: 'Month 6', leads: metrics.leads, qualifiedLeads: metrics.qualifiedLeads, siteVisits: metrics.siteVisits, bookings: metrics.bookings }
   ];
 
-  const pieData = [
-    { name: 'Bookings', value: metrics.bookings * metrics.cpb, color: '#f59e0b' },
-    { name: 'Site Visits', value: metrics.siteVisits * metrics.cpsv, color: '#8b5cf6' },
-    { name: 'CPL', value: metrics.leads * metrics.cpl, color: '#ec4899' }
-  ];
+  const handleSellUnitsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 0;
+    setSellUnits(Math.max(1, value));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -180,44 +180,51 @@ const LeadCalculator = () => {
                   </Select>
                 </div>
 
-                {/* Sell Units Counter */}
+                {/* Sell Units Input and Duration */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/20 border border-white/30 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-white text-sm">Sell Units</span>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 w-8 p-0 bg-white/20 border-white/30 text-white hover:bg-white/30"
-                          onClick={() => setSellUnits(Math.max(1, sellUnits - 1))}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="text-white font-medium mx-2">{sellUnits}</span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 w-8 p-0 bg-white/20 border-white/30 text-white hover:bg-white/30"
-                          onClick={() => setSellUnits(sellUnits + 1)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
+                  <div className="space-y-2">
+                    <label className="text-white text-sm font-medium">Sell Units</label>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 p-0 bg-white/20 border-white/30 text-white hover:bg-white/30"
+                        onClick={() => setSellUnits(Math.max(1, sellUnits - 1))}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        value={sellUnits}
+                        onChange={handleSellUnitsChange}
+                        min="1"
+                        className="bg-white/20 border-white/30 text-white text-center font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 p-0 bg-white/20 border-white/30 text-white hover:bg-white/30"
+                        onClick={() => setSellUnits(sellUnits + 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
 
-                  <Select value={duration} onValueChange={setDuration}>
-                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="3 Months">3 Months</SelectItem>
-                      <SelectItem value="6 Months">6 Months</SelectItem>
-                      <SelectItem value="9 Months">9 Months</SelectItem>
-                      <SelectItem value="12 Months">12 Months</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <label className="text-white text-sm font-medium">Duration</label>
+                    <Select value={duration} onValueChange={setDuration}>
+                      <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200">
+                        <SelectItem value="3 Months">3 Months</SelectItem>
+                        <SelectItem value="6 Months">6 Months</SelectItem>
+                        <SelectItem value="9 Months">9 Months</SelectItem>
+                        <SelectItem value="12 Months">12 Months</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="text-xs text-gray-400 pt-4 border-t border-white/20">
@@ -272,71 +279,78 @@ const LeadCalculator = () => {
             <Card className="bg-white/10 backdrop-blur-lg border-white/20">
               <CardContent className="p-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white mb-2">
+                  <div className="text-2xl font-bold text-white mb-4">
                     Total Budget: {(metrics.totalBudget / 10000000).toFixed(2)} Cr
-                  </div>
-                  <div className="flex justify-center gap-6 text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-                      <span className="text-gray-300">Bookings</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-purple-500 rounded"></div>
-                      <span className="text-gray-300">Site Visits</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-pink-500 rounded"></div>
-                      <span className="text-gray-300">CPL</span>
-                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Chart */}
+            {/* Enhanced Chart */}
             <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+              <CardHeader>
+                <h3 className="text-xl font-bold text-white text-center">Performance Over Time</h3>
+              </CardHeader>
               <CardContent className="p-6">
-                <div className="h-80">
+                <div className="h-96">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.1}/>
-                        </linearGradient>
-                        <linearGradient id="colorSiteVisits" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1}/>
-                        </linearGradient>
-                        <linearGradient id="colorCPL" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#ec4899" stopOpacity={0.1}/>
-                        </linearGradient>
-                      </defs>
-                      <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af' }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af' }} />
-                      <Area
-                        type="monotone"
-                        dataKey="cpl"
-                        stackId="1"
-                        stroke="#ec4899"
-                        fill="url(#colorCPL)"
+                    <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <XAxis 
+                        dataKey="month" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#d1d5db', fontSize: 12 }} 
                       />
-                      <Area
-                        type="monotone"
-                        dataKey="siteVisits"
-                        stackId="1"
-                        stroke="#8b5cf6"
-                        fill="url(#colorSiteVisits)"
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#d1d5db', fontSize: 12 }} 
                       />
-                      <Area
-                        type="monotone"
-                        dataKey="bookings"
-                        stackId="1"
-                        stroke="#f59e0b"
-                        fill="url(#colorBookings)"
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderRadius: '8px',
+                          backdropFilter: 'blur(10px)',
+                          color: 'white'
+                        }}
                       />
-                    </AreaChart>
+                      <Legend 
+                        wrapperStyle={{ color: 'white' }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="leads" 
+                        stroke="#ec4899" 
+                        strokeWidth={3}
+                        dot={{ fill: '#ec4899', strokeWidth: 2, r: 6 }}
+                        name="Leads"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="qualifiedLeads" 
+                        stroke="#8b5cf6" 
+                        strokeWidth={3}
+                        dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 6 }}
+                        name="Qualified Leads"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="siteVisits" 
+                        stroke="#f59e0b" 
+                        strokeWidth={3}
+                        dot={{ fill: '#f59e0b', strokeWidth: 2, r: 6 }}
+                        name="Site Visits"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="bookings" 
+                        stroke="#10b981" 
+                        strokeWidth={3}
+                        dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }}
+                        name="Bookings"
+                      />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
