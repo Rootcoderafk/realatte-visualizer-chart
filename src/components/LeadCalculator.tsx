@@ -279,8 +279,11 @@ const LeadCalculator = () => {
             <Card className="bg-white/10 backdrop-blur-lg border-white/20">
               <CardContent className="p-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white mb-4">
-                    Total Budget: {(metrics.totalBudget / 10000000).toFixed(2)} Cr
+                  <div className="text-4xl font-bold text-white mb-2">
+                    ₹{metrics.totalBudget.toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-lg text-purple-300">
+                    Total Budget
                   </div>
                 </div>
               </CardContent>
