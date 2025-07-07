@@ -76,14 +76,34 @@ const LeadCalculator = () => {
     calculateMetrics();
   }, [propertyType, launchType, location, bhk, marketingChannels, sellUnits, duration]);
 
-  const chartData = [
-    { month: 'Month 1', leads: Math.round(metrics.leads * 0.2), qualifiedLeads: Math.round(metrics.qualifiedLeads * 0.15), siteVisits: Math.round(metrics.siteVisits * 0.15), bookings: Math.round(metrics.bookings * 0.1) },
-    { month: 'Month 2', leads: Math.round(metrics.leads * 0.3), qualifiedLeads: Math.round(metrics.qualifiedLeads * 0.25), siteVisits: Math.round(metrics.siteVisits * 0.25), bookings: Math.round(metrics.bookings * 0.2) },
-    { month: 'Month 3', leads: Math.round(metrics.leads * 0.45), qualifiedLeads: Math.round(metrics.qualifiedLeads * 0.4), siteVisits: Math.round(metrics.siteVisits * 0.4), bookings: Math.round(metrics.bookings * 0.35) },
-    { month: 'Month 4', leads: Math.round(metrics.leads * 0.7), qualifiedLeads: Math.round(metrics.qualifiedLeads * 0.65), siteVisits: Math.round(metrics.siteVisits * 0.65), bookings: Math.round(metrics.bookings * 0.6) },
-    { month: 'Month 5', leads: Math.round(metrics.leads * 0.9), qualifiedLeads: Math.round(metrics.qualifiedLeads * 0.85), siteVisits: Math.round(metrics.siteVisits * 0.85), bookings: Math.round(metrics.bookings * 0.8) },
-    { month: 'Month 6', leads: metrics.leads, qualifiedLeads: metrics.qualifiedLeads, siteVisits: metrics.siteVisits, bookings: metrics.bookings }
-  ];
+  // Dynamic chart data generation based on duration and marketing strategy
+  const generateChartData = () => {
+    const monthCount = duration === '3 Months' ? 3 : duration === '6 Months' ? 6 : duration === '9 Months' ? 9 : 12;
+    
+    // Marketing strategy affects growth curve
+    const marketingMultiplier = marketingChannels.includes('Reels') ? 1.2 : 
+                               marketingChannels.includes('Video') ? 1.1 : 1.0;
+    
+    const chartData = [];
+    
+    for (let i = 1; i <= monthCount; i++) {
+      // Progressive growth with marketing strategy impact
+      const baseProgress = i / monthCount;
+      const adjustedProgress = Math.pow(baseProgress, 0.7) * marketingMultiplier;
+      
+      chartData.push({
+        month: `Month ${i}`,
+        leads: Math.round(metrics.leads * Math.min(adjustedProgress, 1)),
+        qualifiedLeads: Math.round(metrics.qualifiedLeads * Math.min(adjustedProgress, 1)),
+        siteVisits: Math.round(metrics.siteVisits * Math.min(adjustedProgress, 1)),
+        bookings: Math.round(metrics.bookings * Math.min(adjustedProgress, 1))
+      });
+    }
+    
+    return chartData;
+  };
+
+  const chartData = generateChartData();
 
   const handleSellUnitsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value) || 0;
@@ -292,7 +312,9 @@ const LeadCalculator = () => {
             {/* Enhanced Chart */}
             <Card className="bg-white/10 backdrop-blur-lg border-white/20">
               <CardHeader>
-                <h3 className="text-xl font-bold text-white text-center">Performance Over Time</h3>
+                <h3 className="text-xl font-bold text-white text-center">
+                  Performance Over {duration}
+                </h3>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="h-96">
