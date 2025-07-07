@@ -142,7 +142,10 @@ const LeadCalculator = () => {
                     <SelectContent className="bg-white border-gray-200">
                       <SelectItem value="Residential">Residential</SelectItem>
                       <SelectItem value="Commercial">Commercial</SelectItem>
-                      <SelectItem value="Mixed Use">Mixed Use</SelectItem>
+                      <SelectItem value="Villa">Villa</SelectItem>
+                      <SelectItem value="Senior Living">Senior Living</SelectItem>
+                      <SelectItem value="Plots">Plots</SelectItem>
+                      <SelectItem value="Shops cum Offices">Shops cum Offices</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -154,9 +157,10 @@ const LeadCalculator = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-gray-200">
+                      <SelectItem value="Teaser">Teaser</SelectItem>
                       <SelectItem value="Launch">Launch</SelectItem>
-                      <SelectItem value="Pre-Launch">Pre-Launch</SelectItem>
-                      <SelectItem value="Ready">Ready</SelectItem>
+                      <SelectItem value="Sustenance">Sustenance</SelectItem>
+                      <SelectItem value="NRI">NRI</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -180,10 +184,14 @@ const LeadCalculator = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-gray-200">
+                      <SelectItem value="1 RK">1 RK</SelectItem>
                       <SelectItem value="1 BHK">1 BHK</SelectItem>
                       <SelectItem value="2 BHK">2 BHK</SelectItem>
                       <SelectItem value="3 BHK">3 BHK</SelectItem>
-                      <SelectItem value="4+ BHK">4+ BHK</SelectItem>
+                      <SelectItem value="4 BHK">4 BHK</SelectItem>
+                      <SelectItem value="5 BHK">5 BHK</SelectItem>
+                      <SelectItem value="Plot Size 1000sq.ft to 2000sq.ft">Plot Size 1000sq.ft to 2000sq.ft</SelectItem>
+                      <SelectItem value="Plot Size 2000sq.ft to 4000sq.ft">Plot Size 2000sq.ft to 4000sq.ft</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -192,10 +200,9 @@ const LeadCalculator = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="TextAds+StaticBanners+Reels">TextAds+StaticBanners+Reels</SelectItem>
+                      <SelectItem value="TextAds">TextAds</SelectItem>
                       <SelectItem value="TextAds+StaticBanners">TextAds+StaticBanners</SelectItem>
-                      <SelectItem value="Video+Display">Video+Display</SelectItem>
-                      <SelectItem value="Social+Search">Social+Search</SelectItem>
+                      <SelectItem value="TextAds+StaticBanners+Reels">TextAds+StaticBanners+Reels</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -238,10 +245,16 @@ const LeadCalculator = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white border-gray-200">
+
+                        <SelectItem value="15 Days">15 Days</SelectItem>
+                        <SelectItem value="1 Month">1 Month</SelectItem>
+                        <SelectItem value="2 Months">2 Months</SelectItem>
                         <SelectItem value="3 Months">3 Months</SelectItem>
+                        <SelectItem value="4 Months">4 Months</SelectItem>
+                        <SelectItem value="5 Months">5 Months</SelectItem>
                         <SelectItem value="6 Months">6 Months</SelectItem>
-                        <SelectItem value="9 Months">9 Months</SelectItem>
-                        <SelectItem value="12 Months">12 Months</SelectItem>
+                        <SelectItem value="7 Months">7 Months</SelectItem>
+                        <SelectItem value="8 Months">8 Months</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
