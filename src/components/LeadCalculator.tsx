@@ -24,7 +24,7 @@ const LeadCalculator = () => {
   const [launchType, setLaunchType] = useState('Launch');
   const [location, setLocation] = useState('Mumbai South');
   const [bhk, setBhk] = useState('2 BHK');
-  const [marketingChannels, setMarketingChannels] = useState('TextAds+StaticBanners+Reels');
+  const [marketingChannels, setMarketingChannels] = useState('Google');
   const [sellUnits, setSellUnits] = useState(50);
   const [duration, setDuration] = useState('6 Months');
 
@@ -46,7 +46,7 @@ const LeadCalculator = () => {
     
     // Base calculations with realistic multipliers based on form inputs
     const baseLeads = sellUnits * 167;
-    const locationMultiplier = location.includes('Mumbai South') ? 1.5 : 
+    const locationMultiplier = location.includes('Mumbai') ? 1.5 : 
                              location.includes('Delhi') ? 1.3 :
                              location.includes('Bangalore') ? 1.2 : 
                              location.includes('Chennai') ? 1.0 : 
@@ -61,9 +61,11 @@ const LeadCalculator = () => {
                          bhk.includes('Plot') ? 1.1 : 
                          bhk === 'Villa' ? 1.8 : 1.0;
     
-    const channelMultiplier = marketingChannels.includes('Reels') ? 1.3 : 
-                             marketingChannels.includes('StaticBanners') ? 1.1 : 1.0;
+    const channelMultiplier = marketingChannels.includes('Google') ? 1.3 : 
+                             marketingChannels.includes('+') ? 1.1 : 1.0;
     
+                             
+    const cplMult = marketingChannels.includes('+') ? 0 : 257;
     const propertyMultiplier = propertyType === 'Villa' ? 1.5 :
                               propertyType === 'Commercial' ? 1.3 :
                               propertyType === 'Senior Living' ? 0.8 : 1.0;
@@ -73,18 +75,25 @@ const LeadCalculator = () => {
                             launchType === 'Sustenance' ? 0.9 :
                             launchType === 'NRI' ? 1.2 : 1.0;
     
-    const leads = Math.round(baseLeads * locationMultiplier * bhkMultiplier * channelMultiplier * propertyMultiplier * launchMultiplier);
-    const qualifiedLeads = Math.round(leads * 0.22);
+    
+    // Use actual CPL from data
+    let cpl = marketingChannels.includes('+')? actualCPL:
+                marketingChannels.includes('Google') ? actualCPL+cplMult : actualCPL-cplMult;
+    cpl=Math.round(cpl*locationMultiplier);
+    if(cpl<300){
+      cpl=cpl+200;
+    }
+    const leads = Math.round(baseLeads * locationMultiplier * bhkMultiplier * channelMultiplier * propertyMultiplier * launchMultiplier);  
+    const qualifiedLeads = Math.round(leads * 0.3);
     const siteVisits = Math.round(qualifiedLeads * 0.27);
     const bookings = sellUnits;
     
-    // Use actual CPL from data
-    const cpl = actualCPL;
     const cpql = Math.round(cpl / 0.22);
-    const cpsv = Math.round(cpql / 0.27);
-    const cpb = Math.round(cpsv * (siteVisits / bookings));
     
     const totalBudget = leads * cpl;
+    
+    const cpsv = Math.round(totalBudget / siteVisits);
+    const cpb = Math.round(cpsv * (siteVisits / bookings));
 
     setMetrics({
       leads,
@@ -118,8 +127,8 @@ const LeadCalculator = () => {
     };
     
     const monthCount = durationMap[duration] || 6;
-    const marketingMultiplier = marketingChannels.includes('Reels') ? 1.2 : 
-                               marketingChannels.includes('StaticBanners') ? 1.1 : 1.0;
+    const marketingMultiplier = marketingChannels.includes('+') ? 1.1 : 
+                               marketingChannels.includes('Google') ? 1.2 : 1.0;
     
     const chartData = [];
     const timePoints = Math.max(Math.ceil(monthCount), 3);
@@ -183,7 +192,6 @@ const LeadCalculator = () => {
                     <SelectContent className="bg-white border-gray-200">
                       <SelectItem value="Residential">Residential</SelectItem>
                       <SelectItem value="Commercial">Commercial</SelectItem>
-                      <SelectItem value="Villa">Villa</SelectItem>
                       <SelectItem value="Senior Living">Senior Living</SelectItem>
                       <SelectItem value="Plots">Plots</SelectItem>
                       <SelectItem value="Shops cum Offices">Shops cum Offices</SelectItem>
@@ -210,18 +218,54 @@ const LeadCalculator = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="Mumbai South">Mumbai South</SelectItem>
-                      <SelectItem value="Mumbai North">Mumbai North</SelectItem>
-                      <SelectItem value="Mumbai Central">Mumbai Central</SelectItem>
-                      <SelectItem value="Mumbai East">Mumbai East</SelectItem>
-                      <SelectItem value="Delhi NCR">Delhi NCR</SelectItem>
-                      <SelectItem value="New Delhi Central">New Delhi Central</SelectItem>
-                      <SelectItem value="Bangalore East">Bangalore East</SelectItem>
+                    <SelectItem value="Bangalore East">Bangalore East</SelectItem>
                       <SelectItem value="Bangalore North">Bangalore North</SelectItem>
                       <SelectItem value="Bangalore South">Bangalore South</SelectItem>
+                      <SelectItem value="Bangalore West">Bangalore West</SelectItem>
                       <SelectItem value="Chennai Central">Chennai Central</SelectItem>
+                      <SelectItem value="Chennai East">Chennai East</SelectItem>
+                      <SelectItem value="Chennai North">Chennai North</SelectItem>
+                      <SelectItem value="Chennai Outer East">Chennai Outer East</SelectItem>
+                      <SelectItem value="Chennai Outer North">Chennai Outer North</SelectItem>
+                      <SelectItem value="Chennai Outer South">Chennai Outer South</SelectItem>
+                      <SelectItem value="Chennai Outer West">Chennai Outer West</SelectItem>
+                      <SelectItem value="Chennai South">Chennai South</SelectItem>
+                      <SelectItem value="Chennai Suburb">Chennai Suburb</SelectItem>
+                      <SelectItem value="Chennai West">Chennai West</SelectItem>
+                      <SelectItem value="Delhi NCR">Delhi NCR</SelectItem>
+                      <SelectItem value="Delhi">Delhi</SelectItem>
+                      <SelectItem value="Greater Noida">Greater Noida</SelectItem>
+                      <SelectItem value="Gujarat - Ahmedabad">Gujarat - Ahmedabad</SelectItem>
+                      <SelectItem value="Gujarat - Rajkot">Gujarat - Rajkot</SelectItem>
+                      <SelectItem value="Gujarat - Surat">Gujarat - Surat</SelectItem>
+                      <SelectItem value="Gujarat - Vadodra">Gujarat - Vadodra</SelectItem>
+                      <SelectItem value="Gurugram">Gurugram</SelectItem>
                       <SelectItem value="Hyderabad East">Hyderabad East</SelectItem>
+                      <SelectItem value="Hyderabad North">Hyderabad North</SelectItem>
+                      <SelectItem value="Hyderabad South">Hyderabad South</SelectItem>
+                      <SelectItem value="Hyderabad West">Hyderabad West</SelectItem>
+                      <SelectItem value="Kolkata Central">Kolkata Central</SelectItem>
+                      <SelectItem value="Kolkata East">Kolkata East</SelectItem>
+                      <SelectItem value="Kolkata New">Kolkata New</SelectItem>
+                      <SelectItem value="Kolkata North">Kolkata North</SelectItem>
+                      <SelectItem value="Kolkata South">Kolkata South</SelectItem>
+                      <SelectItem value="Kolkata West">Kolkata West</SelectItem>
+                      <SelectItem value="Lucknow">Lucknow</SelectItem>
+                      <SelectItem value="Mangalore">Mangalore</SelectItem>
+                      <SelectItem value="Mumbai Central">Mumbai Central</SelectItem>
+                      <SelectItem value="Mumbai East">Mumbai East</SelectItem>
+                      <SelectItem value="Mumbai North">Mumbai North</SelectItem>
+                      <SelectItem value="Mumbai South">Mumbai South</SelectItem>
+                      <SelectItem value="Nashik">Nashik</SelectItem>
+                      <SelectItem value="New Delhi Central">New Delhi Central</SelectItem>
+                      <SelectItem value="New Delhi East">New Delhi East</SelectItem>
+                      <SelectItem value="New Delhi North">New Delhi North</SelectItem>
+                      <SelectItem value="New Delhi South">New Delhi South</SelectItem>
+                      <SelectItem value="New Delhi West">New Delhi West</SelectItem>
+                      <SelectItem value="Noida">Noida</SelectItem>
+                      <SelectItem value="Noida Central">Noida Central</SelectItem>
                       <SelectItem value="Pune">Pune</SelectItem>
+
                     </SelectContent>
                   </Select>
                 </div>
@@ -250,9 +294,9 @@ const LeadCalculator = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="TextAds">TextAds</SelectItem>
-                      <SelectItem value="TextAds+StaticBanners">TextAds+StaticBanners</SelectItem>
-                      <SelectItem value="TextAds+StaticBanners+Reels">TextAds+StaticBanners+Reels</SelectItem>
+                      <SelectItem value="Google">Google Ads</SelectItem>
+                      <SelectItem value="Meta">Meta Ads</SelectItem>
+                      <SelectItem value="G+M">Google Ads+Meta Ads</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

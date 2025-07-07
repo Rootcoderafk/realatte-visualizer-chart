@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, Legend, defs, linearGradient, stop, Area, AreaChart } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, Legend,  Area, AreaChart } from 'recharts';
 
 interface Metrics {
   leads: number;
@@ -34,7 +34,7 @@ const EnhancedCharts: React.FC<EnhancedChartsProps> = ({ metrics, chartData, dur
   // Enhanced chart data with CPL trend
   const enhancedChartData = chartData.map((item, index) => ({
     ...item,
-    cpl: metrics.cpl * (1 + (index * 0.05)) // Sample CPL variation over time
+    cpl: Math.round(metrics.cpl * (1 + (index * 0.05))) // Sample CPL variation over time
   }));
 
   // Custom tooltip for donut chart
@@ -47,7 +47,7 @@ const EnhancedCharts: React.FC<EnhancedChartsProps> = ({ metrics, chartData, dur
       return (
         <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg p-3 text-white">
           <p className="font-semibold">{data.name}</p>
-          <p className="text-lg">₹{data.value.toLocaleString()}</p>
+          <p className="text-lg">{data.value.toLocaleString()}</p>
           <p className="text-sm text-gray-300">{percentage}% of total</p>
         </div>
       );
