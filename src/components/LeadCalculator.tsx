@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, BarChart, Bar } from 'recharts';
 import { Plus, Minus } from 'lucide-react';
+import { getCPLForLocation } from '@/data/cplData';
+import EnhancedCharts from './EnhancedCharts';
 
 interface Metrics {
   leads: number;
@@ -22,7 +22,7 @@ interface Metrics {
 const LeadCalculator = () => {
   const [propertyType, setPropertyType] = useState('Residential');
   const [launchType, setLaunchType] = useState('Launch');
-  const [location, setLocation] = useState('South Mumbai');
+  const [location, setLocation] = useState('Mumbai South');
   const [bhk, setBhk] = useState('2 BHK');
   const [marketingChannels, setMarketingChannels] = useState('TextAds+StaticBanners+Reels');
   const [sellUnits, setSellUnits] = useState(50);
@@ -41,21 +41,48 @@ const LeadCalculator = () => {
   });
 
   const calculateMetrics = () => {
-    // Base calculations with realistic multipliers based on form inputs
-    const baseLeads = sellUnits * 167; // Base multiplier
-    const locationMultiplier = location === 'South Mumbai' ? 1.2 : location === 'Andheri' ? 1.0 : 0.8;
-    const bhkMultiplier = bhk === '1 BHK' ? 0.8 : bhk === '2 BHK' ? 1.0 : bhk === '3 BHK' ? 1.2 : 1.5;
-    const channelMultiplier = marketingChannels.includes('Reels') ? 1.3 : 1.0;
+    // Get actual CPL from the data based on location and BHK
+    const actualCPL = getCPLForLocation(location, bhk);
     
-    const leads = Math.round(baseLeads * locationMultiplier * bhkMultiplier * channelMultiplier);
+    // Base calculations with realistic multipliers based on form inputs
+    const baseLeads = sellUnits * 167;
+    const locationMultiplier = location.includes('Mumbai South') ? 1.5 : 
+                             location.includes('Delhi') ? 1.3 :
+                             location.includes('Bangalore') ? 1.2 : 
+                             location.includes('Chennai') ? 1.0 : 
+                             location.includes('Hyderabad') ? 0.9 : 0.8;
+    
+    const bhkMultiplier = bhk === '1 RK' ? 0.7 : 
+                         bhk === '1 BHK' ? 0.8 : 
+                         bhk === '2 BHK' ? 1.0 : 
+                         bhk === '3 BHK' ? 1.2 : 
+                         bhk === '4 BHK' ? 1.4 : 
+                         bhk === '5 BHK' ? 1.6 : 
+                         bhk.includes('Plot') ? 1.1 : 
+                         bhk === 'Villa' ? 1.8 : 1.0;
+    
+    const channelMultiplier = marketingChannels.includes('Reels') ? 1.3 : 
+                             marketingChannels.includes('StaticBanners') ? 1.1 : 1.0;
+    
+    const propertyMultiplier = propertyType === 'Villa' ? 1.5 :
+                              propertyType === 'Commercial' ? 1.3 :
+                              propertyType === 'Senior Living' ? 0.8 : 1.0;
+    
+    const launchMultiplier = launchType === 'Teaser' ? 0.7 :
+                            launchType === 'Launch' ? 1.0 :
+                            launchType === 'Sustenance' ? 0.9 :
+                            launchType === 'NRI' ? 1.2 : 1.0;
+    
+    const leads = Math.round(baseLeads * locationMultiplier * bhkMultiplier * channelMultiplier * propertyMultiplier * launchMultiplier);
     const qualifiedLeads = Math.round(leads * 0.22);
     const siteVisits = Math.round(qualifiedLeads * 0.27);
     const bookings = sellUnits;
     
-    const cpl = Math.round((leads * 2160) / leads);
-    const cpql = Math.round((qualifiedLeads * 9819) / qualifiedLeads);
-    const cpsv = Math.round((siteVisits * 35999) / siteVisits);
-    const cpb = Math.round((bookings * 359986) / bookings);
+    // Use actual CPL from data
+    const cpl = actualCPL;
+    const cpql = Math.round(cpl / 0.22);
+    const cpsv = Math.round(cpql / 0.27);
+    const cpb = Math.round(cpsv * (siteVisits / bookings));
     
     const totalBudget = leads * cpl;
 
@@ -76,23 +103,37 @@ const LeadCalculator = () => {
     calculateMetrics();
   }, [propertyType, launchType, location, bhk, marketingChannels, sellUnits, duration]);
 
-  // Dynamic chart data generation based on duration and marketing strategy
+  // Generate chart data based on duration and strategy
   const generateChartData = () => {
-    const monthCount = duration === '3 Months' ? 3 : duration === '6 Months' ? 6 : duration === '9 Months' ? 9 : 12;
+    const durationMap: { [key: string]: number } = {
+      '15 Days': 0.5,
+      '1 Month': 1,
+      '2 Months': 2,
+      '3 Months': 3,
+      '4 Months': 4,
+      '5 Months': 5,
+      '6 Months': 6,
+      '7 Months': 7,
+      '8 Months': 8
+    };
     
-    // Marketing strategy affects growth curve
+    const monthCount = durationMap[duration] || 6;
     const marketingMultiplier = marketingChannels.includes('Reels') ? 1.2 : 
-                               marketingChannels.includes('Video') ? 1.1 : 1.0;
+                               marketingChannels.includes('StaticBanners') ? 1.1 : 1.0;
     
     const chartData = [];
+    const timePoints = Math.max(Math.ceil(monthCount), 3);
     
-    for (let i = 1; i <= monthCount; i++) {
-      // Progressive growth with marketing strategy impact
-      const baseProgress = i / monthCount;
+    for (let i = 1; i <= timePoints; i++) {
+      const baseProgress = i / timePoints;
       const adjustedProgress = Math.pow(baseProgress, 0.7) * marketingMultiplier;
       
+      const timeLabel = monthCount < 1 ? `Week ${i}` : 
+                       monthCount === 1 ? `Week ${i}` : 
+                       `Month ${i}`;
+      
       chartData.push({
-        month: `Month ${i}`,
+        month: timeLabel,
         leads: Math.round(metrics.leads * Math.min(adjustedProgress, 1)),
         qualifiedLeads: Math.round(metrics.qualifiedLeads * Math.min(adjustedProgress, 1)),
         siteVisits: Math.round(metrics.siteVisits * Math.min(adjustedProgress, 1)),
@@ -169,10 +210,18 @@ const LeadCalculator = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="South Mumbai">South Mumbai</SelectItem>
-                      <SelectItem value="Andheri">Andheri</SelectItem>
-                      <SelectItem value="Thane">Thane</SelectItem>
-                      <SelectItem value="Navi Mumbai">Navi Mumbai</SelectItem>
+                      <SelectItem value="Mumbai South">Mumbai South</SelectItem>
+                      <SelectItem value="Mumbai North">Mumbai North</SelectItem>
+                      <SelectItem value="Mumbai Central">Mumbai Central</SelectItem>
+                      <SelectItem value="Mumbai East">Mumbai East</SelectItem>
+                      <SelectItem value="Delhi NCR">Delhi NCR</SelectItem>
+                      <SelectItem value="New Delhi Central">New Delhi Central</SelectItem>
+                      <SelectItem value="Bangalore East">Bangalore East</SelectItem>
+                      <SelectItem value="Bangalore North">Bangalore North</SelectItem>
+                      <SelectItem value="Bangalore South">Bangalore South</SelectItem>
+                      <SelectItem value="Chennai Central">Chennai Central</SelectItem>
+                      <SelectItem value="Hyderabad East">Hyderabad East</SelectItem>
+                      <SelectItem value="Pune">Pune</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -190,8 +239,9 @@ const LeadCalculator = () => {
                       <SelectItem value="3 BHK">3 BHK</SelectItem>
                       <SelectItem value="4 BHK">4 BHK</SelectItem>
                       <SelectItem value="5 BHK">5 BHK</SelectItem>
-                      <SelectItem value="Plot Size 1000sq.ft to 2000sq.ft">Plot Size 1000sq.ft to 2000sq.ft</SelectItem>
-                      <SelectItem value="Plot Size 2000sq.ft to 4000sq.ft">Plot Size 2000sq.ft to 4000sq.ft</SelectItem>
+                      <SelectItem value="Plot Size 1000 Sq - 2000 Sq">Plot Size 1000 Sq - 2000 Sq</SelectItem>
+                      <SelectItem value="Plot Size 2000 Sq - 4000 Sq">Plot Size 2000 Sq - 4000 Sq</SelectItem>
+                      <SelectItem value="Villa">Villa</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -245,7 +295,6 @@ const LeadCalculator = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white border-gray-200">
-
                         <SelectItem value="15 Days">15 Days</SelectItem>
                         <SelectItem value="1 Month">1 Month</SelectItem>
                         <SelectItem value="2 Months">2 Months</SelectItem>
@@ -267,7 +316,7 @@ const LeadCalculator = () => {
             </Card>
           </div>
 
-          {/* Right Panel - Metrics and Chart */}
+          {/* Right Panel - Metrics and Charts */}
           <div className="lg:col-span-2 space-y-6">
             {/* Metrics Cards */}
             <div className="grid grid-cols-4 gap-4">
@@ -275,7 +324,7 @@ const LeadCalculator = () => {
                 <CardContent className="p-4">
                   <div className="text-3xl font-bold text-purple-400">{metrics.leads.toLocaleString()}</div>
                   <div className="text-sm text-purple-300">Leads</div>
-                  <div className="text-lg font-semibold text-white mt-2">{metrics.cpl.toLocaleString()}</div>
+                  <div className="text-lg font-semibold text-white mt-2">₹{metrics.cpl.toLocaleString()}</div>
                   <div className="text-xs text-gray-300">CPL</div>
                 </CardContent>
               </Card>
@@ -284,7 +333,7 @@ const LeadCalculator = () => {
                 <CardContent className="p-4">
                   <div className="text-3xl font-bold text-purple-400">{metrics.qualifiedLeads.toLocaleString()}</div>
                   <div className="text-sm text-purple-300">QL</div>
-                  <div className="text-lg font-semibold text-white mt-2">{metrics.cpql.toLocaleString()}</div>
+                  <div className="text-lg font-semibold text-white mt-2">₹{metrics.cpql.toLocaleString()}</div>
                   <div className="text-xs text-gray-300">CPQL</div>
                 </CardContent>
               </Card>
@@ -293,7 +342,7 @@ const LeadCalculator = () => {
                 <CardContent className="p-4">
                   <div className="text-3xl font-bold text-purple-400">{metrics.siteVisits.toLocaleString()}</div>
                   <div className="text-sm text-purple-300">SV</div>
-                  <div className="text-lg font-semibold text-white mt-2">{metrics.cpsv.toLocaleString()}</div>
+                  <div className="text-lg font-semibold text-white mt-2">₹{metrics.cpsv.toLocaleString()}</div>
                   <div className="text-xs text-gray-300">CPSV</div>
                 </CardContent>
               </Card>
@@ -302,7 +351,7 @@ const LeadCalculator = () => {
                 <CardContent className="p-4">
                   <div className="text-3xl font-bold text-purple-400">{metrics.bookings}</div>
                   <div className="text-sm text-purple-300">Bookings</div>
-                  <div className="text-lg font-semibold text-white mt-2">{(metrics.cpb / 100000).toFixed(2)}L</div>
+                  <div className="text-lg font-semibold text-white mt-2">₹{(metrics.cpb / 100000).toFixed(2)}L</div>
                   <div className="text-xs text-gray-300">CPB</div>
                 </CardContent>
               </Card>
@@ -322,77 +371,12 @@ const LeadCalculator = () => {
               </CardContent>
             </Card>
 
-            {/* Enhanced Chart */}
-            <Card className="bg-white/10 backdrop-blur-lg border-white/20">
-              <CardHeader>
-                <h3 className="text-xl font-bold text-white text-center">
-                  Performance Over {duration}
-                </h3>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="h-96">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                      <XAxis 
-                        dataKey="month" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#d1d5db', fontSize: 12 }} 
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#d1d5db', fontSize: 12 }} 
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)', 
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          borderRadius: '8px',
-                          backdropFilter: 'blur(10px)',
-                          color: 'white'
-                        }}
-                      />
-                      <Legend 
-                        wrapperStyle={{ color: 'white' }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="leads" 
-                        stroke="#ec4899" 
-                        strokeWidth={3}
-                        dot={{ fill: '#ec4899', strokeWidth: 2, r: 6 }}
-                        name="Leads"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="qualifiedLeads" 
-                        stroke="#8b5cf6" 
-                        strokeWidth={3}
-                        dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 6 }}
-                        name="Qualified Leads"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="siteVisits" 
-                        stroke="#f59e0b" 
-                        strokeWidth={3}
-                        dot={{ fill: '#f59e0b', strokeWidth: 2, r: 6 }}
-                        name="Site Visits"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="bookings" 
-                        stroke="#10b981" 
-                        strokeWidth={3}
-                        dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }}
-                        name="Bookings"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Enhanced Charts */}
+            <EnhancedCharts 
+              metrics={metrics} 
+              chartData={chartData} 
+              duration={duration} 
+            />
           </div>
         </div>
       </div>
